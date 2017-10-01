@@ -80,7 +80,7 @@ class ConnectorGitHub(Connector):
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json={"body": message.text}, headers=headers) as resp:
                 if resp.status == 201:
-                    _LOGGER.error("Message sent.")
+                    _LOGGER.info("Message sent.")
                     return True
                 else:
                     _LOGGER.error(await resp.json())
