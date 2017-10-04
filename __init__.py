@@ -6,6 +6,8 @@ import aiohttp
 from opsdroid.connector import Connector
 from opsdroid.message import Message
 
+import requests
+
 
 _LOGGER = logging.getLogger(__name__)
 GITHUB_API_URL = "https://api.github.com"
@@ -22,6 +24,11 @@ class ConnectorGitHub(Connector):
             self.github_token = config["github-token"]
         except KeyError as e:
             _LOGGER.error("Missing auth token! You must set 'github-token' in your config")
+
+        # remembering the bot's github username for future reference.
+        res = requests.get("https://api.github.com/user?access_token="+self.github_token)
+        responseData = json.parse(res.text)
+        self.githubUsername = responseData["login"]
         self.name = self.config.get("name", "github")
         self.opsdroid = None
 
@@ -73,6 +80,9 @@ class ConnectorGitHub(Connector):
 
     async def respond(self, message):
         """Respond with a message."""
+        # stop immediately if the message is from the bot itself.
+        if message.user == self.githubUsername:
+            return
         _LOGGER.debug("Responding via GitHub")
         repo, issue = message.room.split('#')
         url = "{}/repos/{}/issues/{}/comments".format(GITHUB_API_URL, repo, issue)
