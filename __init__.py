@@ -1,12 +1,10 @@
 import json
 import logging
 
-import aiohttp
+import aiohttp, asyncio
 
 from opsdroid.connector import Connector
 from opsdroid.message import Message
-
-import requests
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -14,6 +12,13 @@ GITHUB_API_URL = "https://api.github.com"
 
 
 class ConnectorGitHub(Connector):
+
+    @staticmethod
+    def _getSite(url):
+        #print(url)
+        response = yield from aiohttp.request('GET', url)
+        print("Reading bot information...")
+        return (yield from response.read())
 
     def __init__(self, config):
         """Setup the connector."""
@@ -24,18 +29,18 @@ class ConnectorGitHub(Connector):
             self.github_token = config["github-token"]
         except KeyError as e:
             _LOGGER.error("Missing auth token! You must set 'github-token' in your config")
-
-        # remembering the bot's github username for future reference.
-        res = requests.get("https://api.github.com/user?access_token="+self.github_token)
-        responseData = json.parse(res.text)
-        self.githubUsername = responseData["login"]
         self.name = self.config.get("name", "github")
+        # had troubles using the python 3.6 syntax, using asyncio as the package
+        loop = asyncio.get_event_loop()
+        raw_json = loop.run_until_complete(ConnectorGitHub._getSite('https://api.github.com/user?access_token='+self.github_token))
+        #print(raw_json)
+        botData = json.loads(raw_json)
+        self.githubUsername = botData["login"]
         self.opsdroid = None
 
     async def connect(self, opsdroid):
         """Connect to GitHub."""
         self.opsdroid = opsdroid
-
         self.opsdroid.web_server.web_app.router.add_post(
             "/connector/{}".format(self.name),
             self.github_message_handler)
@@ -74,15 +79,16 @@ class ConnectorGitHub(Connector):
             await self.opsdroid.parse(message)
         except KeyError as error:
             _LOGGER.error(error)
-
         return aiohttp.web.Response(
                 text=json.dumps("Received"), status=201)
 
     async def respond(self, message):
         """Respond with a message."""
         # stop immediately if the message is from the bot itself.
+        print(message.user,self.githubUsername)
         if message.user == self.githubUsername:
-            return
+            return True
+
         _LOGGER.debug("Responding via GitHub")
         repo, issue = message.room.split('#')
         url = "{}/repos/{}/issues/{}/comments".format(GITHUB_API_URL, repo, issue)
