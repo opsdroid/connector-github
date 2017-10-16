@@ -14,11 +14,11 @@ GITHUB_API_URL = "https://api.github.com"
 class ConnectorGitHub(Connector):
 
     @staticmethod
-    def _getSite(url):
+    def get_site(url):
         #print(url)
-        response = yield from aiohttp.request('GET', url)
+        response = await aiohttp.request('GET', url)
         print("Reading bot information...")
-        return (yield from response.read())
+        return (await response.read())
 
     def __init__(self, config):
         """Setup the connector."""
@@ -32,10 +32,14 @@ class ConnectorGitHub(Connector):
         self.name = self.config.get("name", "github")
         # had troubles using the python 3.6 syntax, using asyncio as the package
         loop = asyncio.get_event_loop()
-        raw_json = loop.run_until_complete(ConnectorGitHub._getSite('https://api.github.com/user?access_token='+self.github_token))
+        raw_json = loop.run_until_complete(
+            ConnectorGitHub.get_site(
+                'https://api.github.com/user?access_token='+self.github_token
+            )
+        )
         #print(raw_json)
-        botData = json.loads(raw_json)
-        self.githubUsername = botData["login"]
+        bot_data = json.loads(raw_json)
+        self.github_username = bot_data["login"]
         self.opsdroid = None
 
     async def connect(self, opsdroid):
@@ -85,8 +89,8 @@ class ConnectorGitHub(Connector):
     async def respond(self, message):
         """Respond with a message."""
         # stop immediately if the message is from the bot itself.
-        print(message.user,self.githubUsername)
-        if message.user == self.githubUsername:
+        print(message.user,self.github_username)
+        if message.user == self.github_username:
             return True
 
         _LOGGER.debug("Responding via GitHub")
