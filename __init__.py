@@ -13,13 +13,6 @@ GITHUB_API_URL = "https://api.github.com"
 
 class ConnectorGitHub(Connector):
 
-    @staticmethod
-    def get_site(url):
-        #print(url)
-        response = await aiohttp.request('GET', url)
-        print("Reading bot information...")
-        return (await response.read())
-
     def __init__(self, config):
         """Setup the connector."""
         logging.debug("Loaded GitHub connector")
@@ -30,21 +23,27 @@ class ConnectorGitHub(Connector):
         except KeyError as e:
             _LOGGER.error("Missing auth token! You must set 'github-token' in your config")
         self.name = self.config.get("name", "github")
+        self.opsdroid = None
+    @staticmethod
+    def get_site(url):
+        #print(url)
+        response = await aiohttp.request('GET', url)
+        print("Reading bot information...")
+        return (await response.read())
+    
+    async def connect(self, opsdroid):
+        """Connect to GitHub."""
+        self.opsdroid = opsdroid
         # had troubles using the python 3.6 syntax, using asyncio as the package
-        loop = asyncio.get_event_loop()
+        loop = self.opsdroid.eventloop
         raw_json = loop.run_until_complete(
             ConnectorGitHub.get_site(
                 'https://api.github.com/user?access_token='+self.github_token
             )
         )
-        #print(raw_json)
         bot_data = json.loads(raw_json)
         self.github_username = bot_data["login"]
-        self.opsdroid = None
-
-    async def connect(self, opsdroid):
-        """Connect to GitHub."""
-        self.opsdroid = opsdroid
+        
         self.opsdroid.web_server.web_app.router.add_post(
             "/connector/{}".format(self.name),
             self.github_message_handler)
@@ -89,7 +88,7 @@ class ConnectorGitHub(Connector):
     async def respond(self, message):
         """Respond with a message."""
         # stop immediately if the message is from the bot itself.
-        print(message.user,self.github_username)
+        print(message.user, self.github_username)
         if message.user == self.github_username:
             return True
 
