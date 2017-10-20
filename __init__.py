@@ -1,7 +1,7 @@
 import json
 import logging
 
-import aiohttp, asyncio
+import aiohttp
 
 from opsdroid.connector import Connector
 from opsdroid.message import Message
@@ -25,7 +25,7 @@ class ConnectorGitHub(Connector):
         self.name = self.config.get("name", "github")
         self.opsdroid = None
     @staticmethod
-    def get_site(url):
+    async def get_site(url):
         #print(url)
         response = await aiohttp.request('GET', url)
         print("Reading bot information...")
@@ -34,13 +34,10 @@ class ConnectorGitHub(Connector):
     async def connect(self, opsdroid):
         """Connect to GitHub."""
         self.opsdroid = opsdroid
-        # had troubles using the python 3.6 syntax, using asyncio as the package
         loop = self.opsdroid.eventloop
-        raw_json = loop.run_until_complete(
-            ConnectorGitHub.get_site(
-                'https://api.github.com/user?access_token='+self.github_token
+        raw_json = awaitself.get_site(
+                GITHUB_API_URL+'/user?access_token='+self.github_token
             )
-        )
         bot_data = json.loads(raw_json)
         self.github_username = bot_data["login"]
         
