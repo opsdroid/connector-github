@@ -35,9 +35,10 @@ class ConnectorGitHub(Connector):
         """Connect to GitHub."""
         self.opsdroid = opsdroid
         loop = self.opsdroid.eventloop
-        raw_json = awaitself.get_site(
+        raw_json = await self.get_site(
                 GITHUB_API_URL+'/user?access_token='+self.github_token
             )
+        print("Done.")
         bot_data = json.loads(raw_json)
         self.github_username = bot_data["login"]
         
@@ -76,6 +77,7 @@ class ConnectorGitHub(Connector):
                               payload["sender"]["login"],
                               issue,
                               self)
+            await self.respond(message)
             await self.opsdroid.parse(message)
         except KeyError as error:
             _LOGGER.error(error)
@@ -88,7 +90,6 @@ class ConnectorGitHub(Connector):
         print(message.user, self.github_username)
         if message.user == self.github_username:
             return True
-
         _LOGGER.debug("Responding via GitHub")
         repo, issue = message.room.split('#')
         url = "{}/repos/{}/issues/{}/comments".format(GITHUB_API_URL, repo, issue)
