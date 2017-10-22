@@ -24,21 +24,20 @@ class ConnectorGitHub(Connector):
             _LOGGER.error("Missing auth token! You must set 'github-token' in your config")
         self.name = self.config.get("name", "github")
         self.opsdroid = None
+
     @staticmethod
     async def get_site(url):
-        #print(url)
         response = await aiohttp.request('GET', url)
-        print("Reading bot information...")
+        _LOGGER.debug("Reading bot information...")
         return (await response.read())
     
     async def connect(self, opsdroid):
         """Connect to GitHub."""
         self.opsdroid = opsdroid
-        loop = self.opsdroid.eventloop
         raw_json = await self.get_site(
-                GITHUB_API_URL+'/user?access_token='+self.github_token
+                 '{}/user?access_token={}'.format(GITHUB_API_URL, self.github_token)
             )
-        print("Done.")
+        _LOGGER.debug("Done.")
         bot_data = json.loads(raw_json)
         self.github_username = bot_data["login"]
         
@@ -87,7 +86,7 @@ class ConnectorGitHub(Connector):
     async def respond(self, message):
         """Respond with a message."""
         # stop immediately if the message is from the bot itself.
-        print(message.user, self.github_username)
+        _LOGGER.debug(message.user, self.github_username)
         if message.user == self.github_username:
             return True
         _LOGGER.debug("Responding via GitHub")
