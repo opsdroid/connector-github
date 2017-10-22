@@ -24,11 +24,24 @@ class ConnectorGitHub(Connector):
             _LOGGER.error("Missing auth token! You must set 'github-token' in your config")
         self.name = self.config.get("name", "github")
         self.opsdroid = None
-
+    @staticmethod
+    async def get_site(url):
+        #print(url)
+        response = await aiohttp.request('GET', url)
+        print("Reading bot information...")
+        return (await response.read())
+    
     async def connect(self, opsdroid):
         """Connect to GitHub."""
         self.opsdroid = opsdroid
-
+        loop = self.opsdroid.eventloop
+        raw_json = await self.get_site(
+                GITHUB_API_URL+'/user?access_token='+self.github_token
+            )
+        print("Done.")
+        bot_data = json.loads(raw_json)
+        self.github_username = bot_data["login"]
+        
         self.opsdroid.web_server.web_app.router.add_post(
             "/connector/{}".format(self.name),
             self.github_message_handler)
@@ -64,15 +77,19 @@ class ConnectorGitHub(Connector):
                               payload["sender"]["login"],
                               issue,
                               self)
+            await self.respond(message)
             await self.opsdroid.parse(message)
         except KeyError as error:
             _LOGGER.error(error)
-
         return aiohttp.web.Response(
                 text=json.dumps("Received"), status=201)
 
     async def respond(self, message):
         """Respond with a message."""
+        # stop immediately if the message is from the bot itself.
+        print(message.user, self.github_username)
+        if message.user == self.github_username:
+            return True
         _LOGGER.debug("Responding via GitHub")
         repo, issue = message.room.split('#')
         url = "{}/repos/{}/issues/{}/comments".format(GITHUB_API_URL, repo, issue)
