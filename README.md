@@ -22,7 +22,3 @@ connectors:
     # required
     github-token: aaabbbcccdddeee111222333444
 ```
-
-## License
-
-GNU General Public License Version 3 (GPLv3)
