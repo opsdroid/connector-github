@@ -83,7 +83,7 @@ class ConnectorGitHub(Connector):
         return aiohttp.web.Response(
                 text=json.dumps("Received"), status=201)
 
-    async def respond(self, message):
+    async def respond(self, message, room=None):
         """Respond with a message."""
         # stop immediately if the message is from the bot itself.
         _LOGGER.debug(message.user, self.github_username)
