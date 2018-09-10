@@ -4,7 +4,7 @@ A connector for [opsdroid](https://github.com/opsdroid/opsdroid) to comment on i
 
 ## Requirements
 
-To use the twitter connecter you will need a user for the bot to use and generate a personal api token. It is recommended that you create a separate user from your own account for this. You also need to configure a webhook to send events to opsdroid.
+To use the GitHub connecter you will need a user for the bot to use and generate a personal api token. It is recommended that you create a separate user from your own account for this. You also need to configure a webhook to send events to opsdroid.
 
 ### Creating your application
  * Create GitHub user for the bot to use and log into it
