@@ -1,10 +1,11 @@
+⚠️ *DEPRECATED* ⚠️ This connector is now built in to [opsdroid core](https://opsdroid.readthedocs.io/en/latest/connectors/github/). This repository only exists for backward compatibility and will be removed.
 # opsdroid connector GitHub
 
 A connector for [opsdroid](https://github.com/opsdroid/opsdroid) to comment on issues and pull requests on [GitHub](https://github.com).
 
 ## Requirements
 
-To use the GitHub connecter you will need a user for the bot to use and generate a personal api token. It is recommended that you create a separate user from your own account for this. You also need to configure a webhook to send events to opsdroid.
+To use the GitHub connector you will need a user for the bot to use and generate a personal api token. It is recommended that you create a separate user from your own account for this. You also need to configure a webhook to send events to opsdroid.
 
 ### Creating your application
  * Create GitHub user for the bot to use and log into it
